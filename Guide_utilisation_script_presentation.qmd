@@ -1,0 +1,635 @@
+---
+title: "Publications DEFM en région"
+subtitle: "Un guide d'utilisation du script permettant de produire les publications DEFM trimestrielles régionales et départementales"
+author: "Jade Lemoine (Mareg)"
+
+format:
+  html:
+    # Table des matières
+    toc: true
+    toc-depth: 3
+    toc-expand: 1
+    toc-title: Contents
+    # Numérotation des sections
+    number-sections: true
+    css: styles.css
+---
+
+# Contexte
+
+La loi pour le plein emploi du 18 décembre 2023 prévoit, au plus tard en 2025, une inscription automatisée de l’ensemble des personnes sans emploi auprès de France Travail. 
+
+- Demandeurs d’emploi aujourd’hui inscrits auprès de France Travail ;
+
+- Allocataires du RSA (revenu de solidarité active) ;
+
+- Jeunes accompagnés par les Missions locales ;
+
+- Personnes handicapées accompagnées par Cap emploi.
+
+---
+
+Cette évolution majeure a des incidences statistiques notables avec notamment la création de deux nouvelles séries, les catégories F (parcours social) et G (catégorie d’attente). 
+
+Les évolutions statistiques liées à la mise en place de la loi plein emploi ont alimenté les travaux d’un groupe de travail qui a réfléchi sur les évolutions de la publication trimestrielle sur les demandeurs d'emploi en fin de mois.
+
+---
+
+L’outil utilisé pour générer la publication trimestrielle sur les demandeurs d’emploi en fin de mois évolue également, et le présent document décrit les étapes de traitements et précise les prérequis pour la production d’une maquette territoriale rénovée.
+
+
+La Mission de l’action régionale (Mareg) de la Dares a créé un document Quarto et élaboré trois scripts R afin de répondre aux besoins éditoriaux en région :
+ - Un script pour les régions métropolitaines,
+ - Un script pour les départements métropolitains,
+ - Un script pour les départements d’outre-mer.
+ 
+:::{.callout-important}
+La Mareg s’engage à fournir des versions stables des scripts et à accompagner les Sese dans leur utilisation. Cependant, elle ne pourra pas garantir d’assistance en cas de modifications apportées au code localement, qu’il s’agisse de sa forme, de sa structure ou de son contenu.
+:::
+
+# Les outils : R, RStudio et Quarto
+
+<img src="./images/quarto_process.png" alt="Quarto illustré" class="custom-image">
+
+**R** est le langage de programmation utilisé pour coder les analyses statistiques et la visualisation des données. 
+Les scripts seront exécutés dans l’**environnement RStudio** qui est environnement de développement intégré pour R. 
+
+**Quarto** est un outil de publication qui permet l'édition de rapports, présentations, sites web ou articles scientifiques, sous divers format (HTML, PDF, Word, etc.). 
+
+Ce Framework peut être considéré comme une évolution de **R Markdown** dont il reprend des éléments tout en offrant une plus grande modularité et des fonctionnalités avancées pour l’édition de rapports. Aussi, il présente l'avantage de ne pas dépendre exclusivement de l'environnement R et est exploitable par d'autres langages de programmation (Annexe 1). 
+
+:::{.callout-tip}
+ <table>
+  <thead>
+    <tr>
+      <th>Outils</th>
+      <th>Utilisation</th>
+      <th>Relation avec les autres outils</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>R</td>
+      <td>Langage et moteur de programmation</td>
+      <td>Utilisé par R Studio et Quarto pour exécuter le code</td>
+    </tr>
+    <tr>
+      <td>R Studio</td>
+      <td>Interface graphique <br>- Environnement de développement intégré</td>
+      <td>Intègre R pour l'analyse de données et la lecture du Quarto</td>
+    </tr>
+    <tr>
+      <td>Quarto</td>
+      <td>Générateur de document (HTML, PDF, PPT...)</td>
+      <td>Utilise R (ou d'autres langages) pour lire du code et mettre en page des rapports</td>
+    </tr>
+  </tbody>
+</table>
+:::
+
+Un document Quarto est créé à partir de fichiers au format .qmd (Quarto Markdown). Ces fichiers contiennent du code, des textes, et des métadonnées spécifiquement conçus pour produire des documents finalisés.
+
+# Etapes préalables
+
+## Vérifier les pré-requis logiciel
+
+1. **R 4.3.2** en 64 bits
+2.	RStudio 2024.09.0+375 dénommé également **"Cranberry Hibiscus"**, ou version ultérieure disponible dans le centre logiciel
+3.	Fichiers de données au format **SAS** disponibles sur le serveur de partage Nostra
+
+:::{.callout-tip}
+A noter : Depuis l’interface RStudio, dans le menu Tools > Global Options >R General vous pourrez contrôler la version de R à partir de laquelle vous travaillez. C’est une chose qu’il faut garder en tête car cette manipulation devra être faite à chaque évolution de R.
+:::
+
+### Organiser son poste de travail
+
+Pour encadrer au mieux les traitements sur les postes de travail des agents, tous les éléments de production ont été centralisés dans un unique projet RStudio (Annexe 2). En racine de ce projet, on trouve les fichiers, scripts et dossiers suivants :
+
+
+ <table>
+  <thead>
+    <tr>
+      <th>Type de fichier</th>
+      <th>Contenu</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>**Fichier RProj** <br> <img src="./images/rproj.jpg" alt="Quarto illustré" class="custom-image" style="width: 25%"></td>
+      <td style="text-align: left;">*Publications_DEFM (sorties et scripts).RProj* : encapsule l'ensemble du projet R et garanti l'utilisation de chemins relatifs</td>
+    </tr>
+    <tr>
+      <td>**Scripts R** <br> <img src="./images/rlogo.png" alt="Quarto illustré" class="custom-image" style="width: 25%"></td>
+      <td style="text-align: left;">*DEFM_trim_publi_reg.qmd* : script régions métropolitaines <br>
+          *DEFM_trim_DOM.qmd* : script DOM <br>
+          *DEFM_trim_publi_DEP.qmd* : script des départements en métropole <br>
+          *generer_publi_DEP.R* : génère les rapports automatisés dans les départements </td>
+    </tr>
+    <tr>
+      <td>**Dossiers** <br> <img src="./images/files.png" alt="Quarto illustré" class="custom-image" style="width: 25%"></td>
+      <td style="text-align: left;">
+      *data* : données sources au format SAS (régions, départements, france) <br>
+      *PNG* : c’est ici que l’on trouve l’entête <entete_maregion.png> <br> 
+      *polices* : polices d’écriture utilisées pour la publication <br>
+      *publication_dep* : après avoir été générés, les fichiers HTML pour les publications départementales sont stockés ici <br> 
+      *renv* : dossier relatif au package <renv>, une description plus détaillée de son utilisation est donnée plus bas. <br> 
+      *sorties* : ensemble des tableaux produits pour la publication
+</td>
+    </tr>
+    <tr>
+      <td>**Autres documents** <br> <img src="./images/outilsbureautique.PNG" alt="Quarto illustré" class="custom-image" style="width: 25%"></td>
+      <td style="text-align: left;"> 
+      Le présent *guide d'utilisation* (docx et hmtl) <br>
+      La *feuille de style* (.css) appelée dans chacun des script R <br>
+      Les fichiers (.html) générés lors de la compilation des fichiers (.qmd)
+</td>
+    </tr>
+  </tbody>
+</table>
+
+### Télécharger les données
+
+Avant les traitements, les fichiers de données Nostra au format SAS devront être distribués dans le dossier **data**.
+
+:::{.callout-important}
+Ce sont principalement les tables **trimestrielles** au format **SAS** qui sont utilisées dans la maquette.
+Les tables **brutes** sont utilisées pour pouvoir mobiliser les informations des **séries F et G**.
+:::
+
+::: panel-tabset
+
+#### France métropolitaine
+<ul>
+  <li>**regions** : </li>
+    <ul>
+      <li>**numero_region** : *données stockées dans un sous dossier désigné par le numéro de la région*</li>
+        <ul>
+          <li>**sas**</li>
+            <ul>
+              <li>**cvs**</li>
+              <ul>
+               <li>*s_cvs_cjo_agr_r**XX**_trim.sas7bdat*</li>
+               <li>*s_cvs_cjo_agr_d**XX**_trim.sas7bdat* : ensemble des fichiers trimestriels du département</li>
+              </ul>
+              <li>**brute** : les données brutes utilisées pour la maquette correspondent aux séries F et G. En date du *20/01/2025* le dessin de ces fichiers n'est pas encore arrêté.</li>
+            </ul>
+          </ul>
+       </ul>
+  <li>**cvsFR**</li>
+  <ul>
+    <li>*s_cvs_cjo_agr_nationale_trim.sas7bdat*</li>
+    <ul>   
+      <li>*fichier_departements.csv* :  table de passage pour les régions et départements, France entière</li>
+      <li>*fichier_com.csv* :  table de passage pour les publications Saint-Martin et Saint-Barthélémy</li>
+      <li>*proc_import.sas* : script sas de décompression des fichiers xpt</li>
+    </ul>
+  </ul>
+</ul>
+
+#### Départements d'outre mer (DOM)
+<ul>
+  <li>**regions** : </li>
+    <ul>
+      <li>**dom** : </li>
+        <ul>
+          <li>**sas**</li>
+            <ul>
+              <li>**cvs**</li>
+              <ul>
+               <li>*s_cvs_cjo_agr_dom_trim.sas7bdat*</li>
+              </ul>
+              <li>**brute** : les données brutes utilisées pour la maquette correspondent aux séries F et G. En date du *20/01/2025* le dessin de ces fichiers n'est pas encore arrêté.</li>
+            </ul>
+          </ul>
+       </ul>
+  <li>**cvsFR**</li>
+  <ul>
+    <li>*s_cvs_cjo_agr_nationale_trim.sas7bdat*</li>
+    <ul>   
+      <li>*fichier_departements.csv* :  table de passage pour les régions et départements, France entière</li>
+      <li>*fichier_com.csv* :  table de passage pour les publications Saint-Martin et Saint-Barthélémy</li>
+      <li>*proc_import.sas* : script sas de décompression des fichiers xpt</li>
+    </ul>
+  </ul>
+</ul>
+
+#### Saint-Martin et Saint-Barthélémy
+<ul>
+  <li>**regions** : </li>
+    <ul>
+      <li>**com** : </li>
+        <ul>
+          <li>**sas**</li>
+            <ul>
+              <li>**cvs**</li>
+              <ul>
+               <li>*s_cvs_cjo_agr_r07_trim.sas7bdat*</li>
+               <li>*s_cvs_cjo_agr_r08_trim.sas7bdat*</li>
+              </ul>
+              <li>**brute** : les données brutes utilisées pour la maquette correspondent aux séries F et G. En date du *20/01/2025* le dessin de ces fichiers n'est pas encore arrêté.</li>
+            </ul>
+          </ul>
+        <li>**dom** : </li>
+        <ul>
+          <li>**sas**</li>
+            <ul>
+              <li>**cvs**</li>
+                <ul>
+                <li>*s_cvs_cjo_agr_dom_trim.sas7bdat*</li>
+              </ul>
+              <li>**brute** : les données brutes utilisées pour la maquette correspondent aux séries F et G. En date du *20/01/2025* le dessin de ces fichiers n'est pas encore arrêté.</li>
+            </ul>
+          </ul>
+       </ul>
+  <li>**cvsFR**</li>
+  <ul>
+    <li>*s_cvs_cjo_agr_nationale_trim.sas7bdat*</li>
+    <ul>   
+      <li>*fichier_departements.csv* :  table de passage pour les régions et départements, France entière</li>
+      <li>*fichier_com.csv* :  table de passage pour les publications Saint-Martin et Saint-Barthélémy</li>
+      <li>*proc_import.sas* : script sas de décompression des fichiers xpt</li>
+    </ul>
+  </ul>
+</ul>
+
+:::
+
+
+# Mode d'emploi du script
+
+## Lancer la production de la maquette régionale en 3 étapes
+
+### Vérifier son espace de travail R Studio
+
+1. Ouvrir le **.RProj**
+2. S'assurer que le nom du projet s'affiche bien en haut à droite de la fenêtre RStudio
+
+:::{.callout-tip}
+::: panel-tabset
+
+#### Affichage R dans un projet
+<img src="./images/affichage_proj.PNG" alt="Quarto illustré" class="custom-image" style="width: 75%">
+
+#### Affichage R hors projet
+<img src="./images/affichage_no_proj.PNG" alt="Quarto illustré" class="custom-image" style="width: 75%"> <br>
+
+**Si vous avez cet affichage, fermer RStudio puis rouvrir le fichier .RProj stocké dans votre environnement**
+:::
+:::
+
+3. Dans la fenêtre **<files> (fichiers)** sélectionner le fichier .qmd qui vous intéresse :  
+
+**DEFM_trim_publi_reg.qmd **: Pour les régions de France métropolitaine <br>
+**DEFM_trim_DOM.qmd **: Pour les régions d'outre-mer 
+
+:::{.callout-tip}
+::: panel-tabset
+
+#### Fichier régions de France métropolitaine
+<img src="./images/fichiersqmd_reg.PNG" alt="Quarto illustré" class="custom-image" style="width: 75%">
+
+#### Fichier des départements d'outre mer (DOM)
+<img src="./images/fichiersqmd_dom.PNG" alt="Quarto illustré" class="custom-image" style="width: 75%"> <br>
+
+:::
+:::
+
+### Adapter l’entête (YAML) du script à la région 
+
+Les noms et codes des territoires cibles doivent être précisés dans le bloc « params » du script ***(ligne 16)***. 
+
+:::{.callout-note}
+Le nom de la région doit être écrit selon l'orthographe habituel. Si vous avez un doute sur le format vous pouvez vous référer au document *fichier_departements.csv* présent dans le dossier **data**.
+`note`, `tip`, `warning`, `caution`, and `important`.
+:::
+
+::: panel-tabset
+#### Régions France métropolitaine
+
+2 paramètres à modifier dans l'entête (YAML)
+
+1. Nom de la région
+
+2. Numéro de la région
+
+``` r
+params : 
+  region_nom : "NOM DE LA REGION EN TOUTES LETTRES"
+  region_num : "NUMERO DE LA REGION"
+
+```
+
+:::{.callout-tip}
+<img src="./images/entete_reg.PNG" alt="Quarto illustré" class="custom-image" style="width: 50%">
+:::
+
+
+#### Départements d'Outre Mer 
+
+3 paramètres à modifier : 
+
+1. region_num : numéro de la région 
+
+2. region_nom : nom de la région
+
+3. region_nom_graph : nom de la région sans article
+
+Attention, **le code_zone « dom » doit rester inchangé**
+
+``` r
+params :
+  code_zone : "dom"
+  region_num : "NUMERO DE LA REGION"
+  region_nom : "NOM DE LA REGION AVEC ARTICLE"
+  region_nom_graph : "NOM DE LA REGION SANS ARTICLE"
+```
+:::{.callout-tip}
+<img src="./images/entete_dom.PNG" alt="Quarto illustré" class="custom-image" style="width: 50%">
+:::
+
+#### Saint-Martin et Saint-Barthélémy
+
+**Aucune modification** n'est nécessaire. Les paramètres sont déjà renseignés lors de la livraison du script.
+
+:::
+
+### Cliquer sur **RENDER** et créer la maquette régionale
+
+A présent, il suffit d'appuyer sur **RENDER** en haut de la fenêtre R Studio.
+<img src="./images/render.PNG" alt="Quarto illustré" class="custom-image" style="width: 100%">
+
+:::{.callout-caution}
+Lors de la **première utilisation** il peut être nécessaire de faire tourner le premier morceau de code de votre script.
+
+L'environnement du projet *Publication_DEFM_REG_DEP_DOMCOM* est stabilisé au sein d'un dossier **renv** qui capture la version R et les packages associés au projet. Lors de la première utilisation il peut être demandé de faire tourner le premier morceau de code afin d'initialiser le projet.
+
+<img src="./images/chunk1.PNG" alt="Quarto illustré" class="custom-image" style="width: 100%">
+
+Dans la *console* vous pouvez suivre l'évolution de ce script. Durant cette étape, on vérifie la présence de certains dossiers et fichiers et on s'assure que l'initialisation de l'environnement se déroule bien. Des messages sont envoyés dans la console au fur et à mesure de l'évolution des différentes étapes.
+
+Il est possible que R vous demande l'autorisation pour installer certains packages. Cliquer sur **Y** et **appuyer sur ENTRER** à chaque fois. Cette étape peut être longue mais elle ne devra être faite qu'une fois.
+
+<img src="./images/package.PNG" alt="Quarto illustré" class="custom-image" style="width: 100%">
+
+:::
+
+### Contrôler les documents
+
+
+### Compiler en PDF
+
+
+
+
+## Compilation des publications départementales
+
+Modifier l'entête (YAML) dans le fichier dep.qmd et penser à SAUVER 
+Modifier au niveau du filter dans le fichier generer.dep
+
+Les publications départementales sont créées automatiquement et stockées dans un dossier publications_dep
+
+:::{.callout-important}
+Contrairement à la publication régionale, lorsque les publications départementales sont compilées, aucune fenêtre web ne s'ouvre pour afficher un paerçu de la publication. 
+
+Suivre l'évolution de la création des publications départementales : dans la console, on peut ovir l'évolution de la compilation pour chaque publication départementale. A chaque étape vous pourrez lire : *Output created : département.html*
+:::
+
+# Annexes
+
+
+## Vérifier sa version de R et de R Studio
+
+A chaque mise à jour de R sur votre poste la manipulation suivante doit être faite :
+
+Tools > Global Options > R General > R version > Change... > Sélectionner la version que vous souhaitez utiliser
+
+Pour que la modification prenne effet il faut **sauver** et **quitter** R Studio.
+Vous pouvez ensuite réouvrir votre projet et vérifier au niveau de la console la version R à laquelle votre projet est à présent rattaché.
+
+:::{.callout-tip}
+::: panel-tabset
+
+#### Choisir la version R dans le menu "Global Options"
+
+<img src="./images/versionR_menu.PNG" alt="Quarto illustré" class="custom-image" style="width: 75%">
+
+#### Vérifier la version R sur sa console
+
+1. A l'ouverture de R Studio <br>
+<img src="./images/versionR_console2.PNG" alt="Quarto illustré" class="custom-image" style="width: 75%">
+
+2. A chaque moment de votre travail <br>
+<img src="./images/versionR_console.PNG" alt="Quarto illustré" class="custom-image" style="width: 50%">
+:::
+:::
+
+
+## Comprendre les erreurs et les décrypter
+
+### Au secours : mon code plante
+
+Erreur d'accès et d'autorisations plusieurs astuces :
+
+::: list
+-   Activer votre *VPN*
+-   Vérifiez le chemin d'accès : si vous n'êtes pas dans *C://Users/prenom.nom* il est possible que votre environnement fasse face à des défauts d'autorisations. Dans ce cas, voir directement avec votre Esic ce qui peut être fait d'un point de vue informatique.
+:::
+
+
+
+``` r
+# Define a server for the Shiny app
+function(input, output) {
+  
+  # Fill in the spot we created for a plot
+  output$phonePlot <- renderPlot({
+    # Render a barplot
+    barplot(WorldPhones[,input$region]*1000, 
+            main=input$region,
+            ylab="Number of Telephones",
+            xlab="Year")
+  })
+}
+```
+
+::: footer
+Learn more: [Code Animations](https://{{< meta prerelease-subdomain >}}quarto.org/docs/presentations/revealjs/advanced.html#code-animations)
+:::
+
+### Line Highlighting
+
+-   Highlight specific lines for emphasis
+-   Incrementally highlight additional lines
+
+``` {.python code-line-numbers="4-5|7|10"}
+import numpy as np
+import matplotlib.pyplot as plt
+
+r = np.arange(0, 2, 0.01)
+theta = 2 * np.pi * r
+fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
+ax.plot(theta, r)
+ax.set_rticks([0.5, 1, 1.5, 2])
+ax.grid(True)
+plt.show()
+```
+
+
+## Column Layout {.smaller}
+
+Arrange content into columns of varying widths:
+
+::: columns
+::: {.column width="35%"}
+#### Motor Trend Car Road Tests
+
+The data was extracted from the 1974 Motor Trend US magazine, and comprises fuel consumption and 10 aspects of automobile design and performance for 32 automobiles.
+:::
+
+::: {.column width="3%"}
+:::
+
+::: {.column width="62%"}
+
+
+blabla
+
+:::
+:::
+
+
+## Incremental Lists
+
+Lists can optionally be displayed incrementally:
+
+::: incremental
+-   First item
+-   Second item
+-   Third item
+:::
+
+. . .
+
+<br/> Insert pauses to make other types of content display incrementally.
+
+
+
+## Fragments
+
+Incremental text display and animation with fragments:
+
+<br/>
+
+::: {.fragment .fade-in}
+Fade in
+:::
+
+::: {.fragment .fade-up}
+Slide up while fading in
+:::
+
+::: {.fragment .fade-left}
+Slide left while fading in
+:::
+
+::: {.fragment .fade-in-then-semi-out}
+Fade in then semi out
+:::
+
+. . .
+
+::: {.fragment .strike}
+Strike
+:::
+
+::: {.fragment .highlight-red}
+Highlight red
+:::
+
+
+## Slide Backgrounds {background="#43464B"}
+
+Set the `background` attribute on a slide to change the background color (all CSS color formats are supported).
+
+Different background transitions are available via the `background-transition` option.
+
+
+
+## Media Backgrounds {background="#43464B" background-image="images/milky-way.jpeg"}
+
+You can also use the following as a slide background:
+
+-   An image: `background-image`
+
+-   A video: `background-video`
+
+-   An iframe: `background-iframe`
+
+
+## Absolute Position
+
+Position images or other elements at precise locations
+
+![](mini/images/kitten-400-350.jpeg){.absolute top="170" left="30" width="400" height="400"}
+
+![](mini/images/kitten-450-250.jpeg){.absolute .fragment top="150" right="80" width="450"}
+
+![](mini/images/kitten-300-200.jpeg){.absolute .fragment bottom="110" right="130" width="300"}
+
+
+
+## Auto-Animate {auto-animate="true" auto-animate-easing="ease-in-out"}
+
+Automatically animate matching elements across slides with Auto-Animate.
+
+::: r-hstack
+::: {data-id="box1" auto-animate-delay="0" style="background: #2780e3; width: 200px; height: 150px; margin: 10px;"}
+:::
+
+::: {data-id="box2" auto-animate-delay="0.1" style="background: #3fb618; width: 200px; height: 150px; margin: 10px;"}
+:::
+
+::: {data-id="box3" auto-animate-delay="0.2" style="background: #e83e8c; width: 200px; height: 150px; margin: 10px;"}
+:::
+:::
+
+
+## Auto-Animate {auto-animate="true" auto-animate-easing="ease-in-out"}
+
+Automatically animate matching elements across slides with Auto-Animate.
+
+::: r-stack
+::: {data-id="box1" style="background: #2780e3; width: 350px; height: 350px; border-radius: 200px;"}
+:::
+
+::: {data-id="box2" style="background: #3fb618; width: 250px; height: 250px; border-radius: 200px;"}
+:::
+
+::: {data-id="box3" style="background: #e83e8c; width: 150px; height: 150px; border-radius: 200px;"}
+:::
+:::
+
+
+
+## Slide Transitions {.smaller}
+
+The next few slides will transition using the `slide` transition
+
+| Transition | Description                                                            |
+|------------|------------------------------------------------------------------------|
+| `none`     | No transition (default, switch instantly)                              |
+| `fade`     | Cross fade                                                             |
+| `slide`    | Slide horizontally                                                     |
+| `convex`   | Slide at a convex angle                                                |
+| `concave`  | Slide at a concave angle                                               |
+| `zoom`     | Scale the incoming slide so it grows in from the center of the screen. |
+
+
+
+
+
+
+
+
+
+
